@@ -1,0 +1,3 @@
+.vscode
+eBPF/*
+!eBPF/examples/fuse/*.c
