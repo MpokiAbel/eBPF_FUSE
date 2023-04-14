@@ -1,4 +1,4 @@
-#define FUSE_USE_VERSION 26
+#define FUSE_USE_VERSION 31
 #include <fuse.h>
 #include <limits.h>
 #include <errno.h>
@@ -7,15 +7,17 @@
 #include <unistd.h>
 #include <dirent.h>
 
-static const char *base_dir = "/";
+static const char *base_dir = "/home";
 
-int stackfs__getattr(const char *path, struct stat *stat)
+int stackfs__getattr(const char *path, struct stat *stat, struct fuse_file_info *fi)
 {
     int res;
     char full_path[PATH_MAX];
 
+    (void)fi;
+
     sprintf(full_path, "%s%s", base_dir, path);
-    printf("Path: %s", full_path);
+    printf("getattr: %s\n", full_path);
     res = lstat(full_path, stat);
     if (res == -1)
         return -errno;
@@ -29,7 +31,7 @@ int stackfs__open(const char *path, struct fuse_file_info *fi)
     char full_path[PATH_MAX];
 
     sprintf(full_path, "%s%s", base_dir, path);
-    printf("Path: %s", full_path);
+    printf("open: %s\n", full_path);
 
     fd = open(full_path, fi->flags);
 
@@ -47,7 +49,7 @@ int stackfs__opendir(const char *path, struct fuse_file_info *fi)
     char full_path[PATH_MAX];
 
     sprintf(full_path, "%s%s", base_dir, path);
-    printf("Path: %s", full_path);
+    printf("opendir: %s \n", full_path);
 
     // Open directory
     dir = opendir(full_path);
@@ -70,7 +72,7 @@ int stackfs__read(const char *path, char *buff, size_t size, off_t offset, struc
     char full_path[PATH_MAX];
 
     sprintf(full_path, "%s%s", base_dir, path);
-    printf("Path: %s", full_path);
+    printf("read: %s\n", full_path);
 
     res = pread(fi->fh, buff, size, offset);
     if (res == -1)
@@ -79,7 +81,7 @@ int stackfs__read(const char *path, char *buff, size_t size, off_t offset, struc
     return res;
 }
 
-int stackfs__readdir(const char *path, void *buff, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi)
+int stackfs__readdir(const char *path, void *buff, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi,enum fuse_readdir_flags flags)
 {
     DIR *dp;
     struct dirent *de;
@@ -90,7 +92,7 @@ int stackfs__readdir(const char *path, void *buff, fuse_fill_dir_t filler, off_t
     char full_path[PATH_MAX];
 
     sprintf(full_path, "%s%s", base_dir, path);
-    printf("Path: %s", full_path);
+    printf("readdir: %s\n", full_path);
 
     dp = opendir(full_path);
     if (dp == NULL)
@@ -104,7 +106,7 @@ int stackfs__readdir(const char *path, void *buff, fuse_fill_dir_t filler, off_t
         st.st_ino = de->d_ino;
         st.st_mode = de->d_type << 12;
 
-        if (filler(buff, de->d_name, &st, 0))
+        if (filler(buff, de->d_name, &st, 0, FUSE_FILL_DIR_PLUS))
             break;
     }
 
@@ -119,7 +121,7 @@ int stackfs__readlink(const char *path, char *buff, size_t size)
     char full_path[PATH_MAX];
 
     sprintf(full_path, "%s%s", base_dir, path);
-    printf("Path: %s", full_path);
+    printf("readlink: %s\n", full_path);
 
     ret = readlink(full_path, buff, size - 1);
     if (ret == -1)

@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-Wall $(shell pkg-config fuse --cflags)
-LIBS=$(shell pkg-config fuse --libs)
+CFLAGS=-Wall $(shell pkg-config fuse3 --cflags)
+LIBS=$(shell pkg-config fuse3 --libs)
 
-PROGRAMS = hello stackfs
+PROGRAMS = stackfs
 
 .PHONY: all $(PROGRAMS)
 
