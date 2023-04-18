@@ -8,17 +8,17 @@
 #include <dirent.h>
 #include <stdlib.h>
 
-static const char *base_dir = "/home/mpoki/Documents/M2_MOSIG/Stage/fuse_fs/root";
+// static const char *base_dir = "/home/mpoki/Documents/M2_MOSIG/Stage/fuse_fs/root";
 
 int stackfs__getattr(const char *path, struct stat *stat, struct fuse_file_info *fi)
 {
     int res;
-    char full_path[PATH_MAX];
+    // char full_path[PATH_MAX];
 
     (void)fi;
 
-    sprintf(full_path, "%s%s", base_dir, path);
-    printf("getattr: %s\n", path);
+    // sprintf(full_path, "%s%s", base_dir, path);
+    // printf("getattr: %s\n", full_path);
     res = lstat(path, stat);
     if (res == -1)
         return -errno;
@@ -29,10 +29,10 @@ int stackfs__getattr(const char *path, struct stat *stat, struct fuse_file_info 
 int stackfs__open(const char *path, struct fuse_file_info *fi)
 {
     int fd;
-    char full_path[PATH_MAX];
+    // char full_path[PATH_MAX];
 
-    sprintf(full_path, "%s%s", base_dir, path);
-    printf("open: %s\n", path);
+    // sprintf(full_path, "%s%s", base_dir, path);
+    // printf("open: %s\n", full_path);
 
     fd = open(path, fi->flags);
 
@@ -47,10 +47,10 @@ int stackfs__opendir(const char *path, struct fuse_file_info *fi)
 
     DIR *dir;
     int ret;
-    char full_path[PATH_MAX];
+    // char full_path[PATH_MAX];
 
-    sprintf(full_path, "%s%s", base_dir, path);
-    printf("opendir: %s \n", path);
+    // sprintf(full_path, "%s%s", base_dir, path);
+    // printf("opendir: %s \n", full_path);
 
     // Open directory
     dir = opendir(path);
@@ -70,10 +70,10 @@ int stackfs__opendir(const char *path, struct fuse_file_info *fi)
 int stackfs__read(const char *path, char *buff, size_t size, off_t offset, struct fuse_file_info *fi)
 {
     int res;
-    char full_path[PATH_MAX];
+    // char full_path[PATH_MAX];
 
-    sprintf(full_path, "%s%s", base_dir, path);
-    printf("read: %s\n", path);
+    // sprintf(full_path, "%s%s", base_dir, path);
+    // printf("read: %s\n", path);
 
     res = pread(fi->fh, buff, size, offset);
     if (res == -1)
@@ -90,10 +90,10 @@ int stackfs__readdir(const char *path, void *buff, fuse_fill_dir_t filler, off_t
     (void)offset;
     (void)fi;
 
-    char full_path[PATH_MAX];
+    // char full_path[PATH_MAX];
 
-    sprintf(full_path, "%s%s", base_dir, path);
-    printf("readdir: %s\n", path);
+    // sprintf(full_path, "%s%s", base_dir, path);
+    // printf("readdir: %s\n", path);
 
     dp = opendir(path);
     if (dp == NULL)
@@ -111,7 +111,6 @@ int stackfs__readdir(const char *path, void *buff, fuse_fill_dir_t filler, off_t
             break;
     }
 
-    
     return 0;
 }
 
@@ -119,10 +118,10 @@ int stackfs__readlink(const char *path, char *buff, size_t size)
 {
     int ret;
 
-    char full_path[PATH_MAX];
+    // char full_path[PATH_MAX];
 
-    sprintf(full_path, "%s%s", base_dir, path);
-    printf("readlink: %s\n", path);
+    // sprintf(full_path, "%s%s", base_dir, path);
+    // printf("readlink: %s\n", path);
 
     ret = readlink(path, buff, size - 1);
     if (ret == -1)
@@ -152,15 +151,15 @@ int stackfs__read_buf(const char *path, struct fuse_bufvec **bufp,
 
     *bufp = buf;
 
-    printf("read_buf: %s\n", path);
-
+    // printf("read_buf: %s\n", path);
 
     return 0;
 }
 
-int stackfs__releasedir (const char *path, struct fuse_file_info *fi){
+int stackfs__releasedir(const char *path, struct fuse_file_info *fi)
+{
     closedir((DIR *)fi->fh);
-    printf("releasedir: %s\n", path);
+    // printf("releasedir: %s\n", path);
 
     return 0;
 }
@@ -174,10 +173,11 @@ static struct fuse_operations stackfs__op = {
     .readlink = stackfs__readlink,
     .read_buf = stackfs__read_buf,
     .releasedir = stackfs__releasedir,
-    
+
 };
 
 int main(int argc, char *argv[])
 {
+
     return fuse_main(argc, argv, &stackfs__op, NULL);
 }

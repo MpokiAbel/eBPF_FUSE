@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-Wall $(shell pkg-config fuse3 --cflags)
 LIBS=$(shell pkg-config fuse3 --libs)
 
-PROGRAMS = stackfs
+PROGRAMS = stackfs client server
 
 .PHONY: all $(PROGRAMS)
 
