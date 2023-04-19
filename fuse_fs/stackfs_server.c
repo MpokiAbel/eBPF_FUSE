@@ -106,70 +106,75 @@ void handle_releasedir(int connfd, uint64_t fh)
 
 void handle_request(int connfd, struct requests *request)
 {
-
-    if (strcmp(request->type, "getattr") == 0)
+    switch (request->type)
     {
+    case 1:
         handle_getattr(connfd, request->path);
-    }
-    else if (strcmp(request->type, "opendir") == 0)
-    {
-        handle_opendir(connfd, request->path);
-    }
-    else if (strcmp(request->type, "readdir") == 0)
-    {
-        handle_readdir(connfd, request->path);
-    }
+        break;
 
-    else if (strcmp(request->type, "readlink") == 0)
-    {
-        handle_readlink(connfd, request->path, request->size);
-    }
-
-    else if (strcmp(request->type, "releasedir") == 0)
-    {
-        handle_releasedir(connfd, request->fh);
-    }
-
-    else if (strcmp(request->type, "open") == 0)
-    {
+    case 2:
         handle_open(connfd, request->path, request->flags);
+        break;
+
+    case 3:
+        handle_opendir(connfd, request->path);
+        break;
+
+    case 4:
+        /* code */
+        break;
+
+    case 5:
+        handle_readdir(connfd, request->path);
+        break;
+
+    case 6:
+        handle_readlink(connfd, request->path, request->size);
+        break;
+
+    case 7:
+        handle_releasedir(connfd, request->fh);
+        break;
+
+    default:
+        printf("Not implemented %d\n", request->type);
+        break;
     }
-    // else if (strcmp(request->type, "read") == 0)
-    // {
-    //     return 0;
-    // }
-    else
-        printf("Not implemented");
+
 }
 
-int main()
+int main(int argc, char const *argv[])
 {
-    struct requests recv_request ;
-    int n;
     int sockfd = do_server_connect();
-
+    printf("Server started .....\n");
     // ToDo: make it accept multiple requests i.e connections
-    int connfd = accept(sockfd, NULL, NULL);
-    if (connfd < 0)
-    {
-        perror("accept");
-        return -1;
-    }
 
-    // Loop to handle connection requests
+    struct requests recv_request = {0};
+    int n;
+
+    printf("Entering the while\n");
     while (1)
     {
-        // receive data in a buffer
-        n = recv(connfd, &recv_request, sizeof(struct requests), 0);
-        if (n < 0)
+        int connfd = accept(sockfd, NULL, NULL);
+        if (connfd < 0)
         {
-            perror("recv");
-            continue;
+            perror("accept");
+            return -1;
         }
+        while (1)
+        {
+            n = recv(connfd, &recv_request, sizeof(struct requests), 0);
+            if (n <= 0)
+            {
+                perror("recv");
+                close(connfd);
+                break;
+            }
 
-        // handle_request(connfd, &recv_request);
-        memset(&recv_request, 0, sizeof(struct requests));
+            handle_request(connfd, &recv_request);
+            memset(&recv_request, 0, sizeof(struct requests));
+        }
     }
-    close(connfd);
+
     return 0;
 }
