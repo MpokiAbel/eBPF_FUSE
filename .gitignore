@@ -1,3 +1,5 @@
 .vscode
+mnt/
+root/
 eBPF/*
 !eBPF/examples/fuse/*.c

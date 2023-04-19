@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 
-#define ENABLE_REMOTE 1
+#define ENABLE_REMOTE 0
 #define SERVER_PORT 9002
 
 struct requests
@@ -10,11 +10,15 @@ struct requests
     char path[256];
     char type[10];
     int flags;
+    uint64_t fh;
+    //Used for simlink
+    size_t size;
 };
 
-struct getaddr_response
+struct server_response
 {
     int bool;
+    char path[256];
     struct stat stat;
 };
 

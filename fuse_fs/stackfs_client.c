@@ -24,28 +24,25 @@ int stackfs__getattr(const char *path, struct stat *stat, struct fuse_file_info 
 
     if (ENABLE_REMOTE)
     {
-        struct requests *request = malloc(sizeof(struct requests));
-        struct getaddr_response *stat_res = malloc(sizeof(struct getaddr_response));
+        struct requests request;
+        struct server_response stat_res;
 
-        strcpy(request->path, path);
-        strcpy(request->type, "getattr");
+        strcpy(request.path, path);
+        strcpy(request.type, "getattr");
 
         // printf("getattr: %s\n", buf);
-        if (send(sockfd, request, sizeof(struct requests), 0) != sizeof(struct requests))
+        if (send(sockfd, &request, sizeof(struct requests), 0) != sizeof(struct requests))
         {
             perror("send");
             return -errno;
         }
 
         // Receive the response from the server
-        recv(sockfd, stat_res, sizeof(struct getaddr_response), 0);
-        if (stat_res->bool == 0)
+        recv(sockfd, &stat_res, sizeof(struct server_response), 0);
+        if (stat_res.bool == 0)
             printf("There is an error\n");
         else
-            *stat = stat_res->stat;
-
-        free(request);
-        free(stat_res);
+            *stat = stat_res.stat;
     }
     else
     {
@@ -263,11 +260,11 @@ int stackfs__releasedir(const char *path, struct fuse_file_info *fi)
 
 static struct fuse_operations stackfs__op = {
     .getattr = stackfs__getattr,
-    .opendir = stackfs__opendir,
-    .open = stackfs__open,
-    .read = stackfs__read,
-    .readdir = stackfs__readdir,
-    .readlink = stackfs__readlink,
+    // .opendir = stackfs__opendir,
+    // .open = stackfs__open,
+    // .read = stackfs__read,
+    // .readdir = stackfs__readdir,
+    // .readlink = stackfs__readlink,
     // .read_buf = stackfs__read_buf,
     .releasedir = stackfs__releasedir,
 
