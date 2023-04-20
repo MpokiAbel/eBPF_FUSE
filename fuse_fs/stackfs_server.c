@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,8 +6,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <stdint.h>
 #include "socket.h"
 
+const char *base_dir = "/home/mpoki/Documents/M2_MOSIG";
 static void
 handle_getattr(int connfd, const char *path)
 {
@@ -14,7 +17,7 @@ handle_getattr(int connfd, const char *path)
 
     int res = lstat(path, &stbuf.stat);
 
-    printf("getattr: %s\n", path);
+    // printf("getattr: %s\n", path);
     if (res < 0)
     {
         printf("handle_getatt failed\n");
@@ -42,19 +45,27 @@ static void handle_open(int connfd, const char *path, int flags)
 static void handle_opendir(int connfd, const char *path)
 {
     DIR *dir = opendir(path);
-    printf("opendir: %s\n", path);
+    uint64_t ptr = (uint64_t)dir;
+    // printf("opendir: %s: %ld\n", path, ptr);
     if (dir == NULL)
+    {
+        int i = 0;
         printf("Opendir failed on the server");
-    send(connfd, dir, sizeof(dir), 0);
+        send(connfd, &i, sizeof(int), 0);
+    }
+
+    else
+        send(connfd, &ptr, sizeof(intptr_t), 0);
 }
 
 static void handle_readdir(int connfd, const char *path)
 {
     DIR *dir;
     struct dirent *de;
-    struct server_response *res;
-    int count;
+    struct server_response res;
+    size_t count = 0;
 
+    // printf("readdir: %s\n", path);
     dir = opendir(path);
     if (dir == NULL)
     {
@@ -66,46 +77,65 @@ static void handle_readdir(int connfd, const char *path)
     {
         count++;
     }
-    closedir(dir);
 
     dir = opendir(path);
-    res = malloc(count * sizeof(struct server_response));
-
+    if (!dir)
+    {
+        perror("opendir");
+        return;
+    }
     while ((de = readdir(dir)) != NULL)
     {
-        strcpy(res->path, de->d_name);
-        res->stat.st_ino = de->d_ino;
-        res->stat.st_mode = de->d_type << 12;
+        strcpy(res.path, de->d_name);
+        res.stat.st_ino = de->d_ino;
+        res.stat.st_mode = de->d_type << 12;
+        res.size = count;
+        send(connfd, &res, sizeof(res), 0);
     }
 
-    if (errno != 0)
-        res->bool = 1;
-    send(connfd, res, count * sizeof(struct server_response), 0);
     closedir(dir);
-    free(res);
 }
 
-void handle_readlink(int connfd, const char *path, size_t size)
+static void handle_readlink(int connfd, const char *path, size_t size)
 {
     char buff[size];
 
     int ret = readlink(path, buff, size - 1);
 
     buff[ret] = '\0';
+    // printf("readlink: %s\n", path);
 
     send(connfd, buff, size, 0);
 }
 
-void handle_releasedir(int connfd, uint64_t fh)
+static void handle_releasedir(int connfd, uint64_t fh)
 {
 
     int ret = closedir((DIR *)fh);
+    printf("releasedir: \n");
 
     send(connfd, &ret, sizeof(ret), 0);
 }
 
-void handle_request(int connfd, struct requests *request)
+static void handle_read(int connfd, const char *path, size_t size)
 {
+
+    int pipefd[2];
+    pipe(pipefd);
+
+    int fd = open(path, O_RDONLY);
+
+    int sp = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+
+    sp = splice(pipefd[0], NULL, connfd, NULL, sp, SPLICE_F_MOVE);
+}
+
+static void handle_request(int connfd, struct requests *request)
+{
+    char path[256];
+    strcpy(path, request->path);
+    sprintf(request->path, "%s%s", base_dir, path);
+
     switch (request->type)
     {
     case 1:
@@ -121,7 +151,7 @@ void handle_request(int connfd, struct requests *request)
         break;
 
     case 4:
-        /* code */
+        handle_read(connfd,request->path,request->size);
         break;
 
     case 5:
@@ -140,7 +170,6 @@ void handle_request(int connfd, struct requests *request)
         printf("Not implemented %d\n", request->type);
         break;
     }
-
 }
 
 int main(int argc, char const *argv[])

@@ -1,5 +1,6 @@
 .vscode
 mnt/
+fuse_fs/*.out
 root/
 eBPF/*
 !eBPF/examples/fuse/*.c

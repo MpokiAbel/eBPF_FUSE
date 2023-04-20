@@ -3,7 +3,7 @@
 #include <sys/stat.h>
 
 #define ENABLE_REMOTE 1
-#define SERVER_PORT 9002
+#define SERVER_PORT 9000
 
 struct requests
 {
@@ -19,6 +19,7 @@ struct server_response
 {
     int bool;
     char path[256];
+    size_t size;
     struct stat stat;
 };
 
