@@ -9,7 +9,7 @@
 #include <stdint.h>
 #include "socket.h"
 
-const char *base_dir = "/home/mpoki/Documents/M2_MOSIG";
+const char *base_dir = "./root";
 static void
 handle_getattr(int connfd, const char *path)
 {
