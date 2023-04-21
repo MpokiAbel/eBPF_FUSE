@@ -336,7 +336,6 @@ static struct fuse_operations stackfs__op = {
     .read = stackfs__read,
     .readdir = stackfs__readdir,
     .readlink = stackfs__readlink,
-    // .releasedir = stackfs__releasedir,
 
 };
 

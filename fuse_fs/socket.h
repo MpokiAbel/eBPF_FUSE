@@ -3,7 +3,7 @@
 #include <sys/stat.h>
 
 #define ENABLE_REMOTE 1
-#define SERVER_PORT 9000
+#define SERVER_PORT 9001
 
 struct requests
 {
